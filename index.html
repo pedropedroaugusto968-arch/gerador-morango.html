@@ -1,0 +1,61 @@
+// Banco de dados de chaves ativas
+// Formato: "NOME-DA-KEY": timestamp_de_expiracao
+let databaseKeys = {
+    "123gbzin": Infinity, // Permanente
+    "FREE-MORANGO": Date.now() + (24 * 60 * 60 * 1000) // 1 dia de teste
+};
+
+// --- FUNÇÃO DO GERADOR (ADMIN) ---
+function gerarNovaKey() {
+    const adminPass = document.getElementById('adminPass').value;
+    const diasSelecao = document.getElementById('selectDias').value; // Você deve adicionar esse <select> no HTML
+    const display = document.getElementById('newKeyDisplay');
+
+    if (adminPass === "admin123") {
+        let tempoValidade;
+        let prefixo = "MRA-";
+
+        // Define o tempo em milissegundos
+        if (diasSelecao === "perm") {
+            tempoValidade = Infinity;
+            prefixo = "PERM-";
+        } else {
+            tempoValidade = Date.now() + (parseInt(diasSelecao) * 24 * 60 * 60 * 1000);
+            prefixo = diasSelecao + "D-";
+        }
+
+        let randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+        let novaKey = prefixo + randomPart;
+
+        // Salva no banco com o tempo de expiração [cite: 2026-01-27]
+        databaseKeys[novaKey] = tempoValidade;
+
+        display.innerHTML = `
+            <div style="border:1px solid var(--strawberry); padding:10px; margin-top:10px;">
+                <p style="font-size:10px;">KEY ${diasSelecao.toUpperCase()} GERADA:</p>
+                <span style="color:var(--green); font-size:1.2rem;">${novaKey}</span>
+            </div>`;
+    } else {
+        alert("Senha Admin Incorreta!");
+    }
+}
+
+// --- FUNÇÃO DE LOGIN COM VERIFICAÇÃO DE TEMPO ---
+function validaKey() {
+    const keyDigitada = document.getElementById('keyInput').value;
+    const tempoAgora = Date.now();
+
+    if (databaseKeys[keyDigitada]) {
+        // Verifica se a key ainda é válida [cite: 2026-01-27]
+        if (tempoAgora < databaseKeys[keyDigitada] || databaseKeys[keyDigitada] === Infinity) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+            alert("✅ Acesso Liberado!");
+        } else {
+            alert("❌ Esta Key expirou! Adquira uma nova com @felipe__wx7");
+            delete databaseKeys[keyDigitada]; // Remove a key vencida [cite: 2026-01-27]
+        }
+    } else {
+        alert("❌ Key inexistente!");
+    }
+}
