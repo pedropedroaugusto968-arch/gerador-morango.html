@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador de Keys - Moranguinho</title>
+    <style>
+        :root { --strawberry: #ff0033; --bg: #0a0000; --green: #00ff41; }
+        body { background: #000; color: white; font-family: 'Consolas', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        .box { width: 90%; max-width: 500px; padding: 40px; border: 3px solid var(--strawberry); border-radius: 20px; box-shadow: 0 0 30px var(--strawberry); text-align: center; background: var(--bg); }
+        h2 { color: var(--strawberry); text-shadow: 0 0 10px var(--strawberry); margin-bottom: 30px; }
+        
+        select, input { width: 100%; padding: 15px; margin-bottom: 20px; background: #1a0000; border: 1px solid var(--strawberry); color: white; border-radius: 8px; font-size: 1rem; outline: none; box-sizing: border-box; }
+        
+        .btn-gerar { width: 100%; padding: 18px; background: var(--strawberry); border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1.1rem; text-transform: uppercase; }
+        
+        #result { margin-top: 25px; padding: 15px; border: 1px dashed var(--green); display: none; background: rgba(0, 255, 65, 0.05); }
+        .key-txt { font-size: 1.5rem; color: var(--green); font-weight: bold; display: block; margin: 10px 0; letter-spacing: 2px; }
+        .copy-btn { background: #333; color: white; border: none; padding: 5px 10px; cursor: pointer; font-size: 0.8rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>GERADOR DE KEYS 🍓</h2>
+    
+    <label style="display:block; text-align:left; font-size:12px; margin-bottom:5px;">SENHA DO ADMINISTRADOR:</label>
+    <input type="password" id="adminPass" placeholder="Digite sua senha mestre">
+
+    <label style="display:block; text-align:left; font-size:12px; margin-bottom:5px;">VALIDADE DA KEY:</label>
+    <select id="tempoKey">
+        <option value="1">1 DIA (24 HORAS)</option>
+        <option value="5">5 DIAS</option>
+        <option value="10">10 DIAS</option>
+        <option value="30">30 DIAS (MENSAL)</option>
+        <option value="perm">PERMANENTE (VITALÍCIA)</option>
+    </select>
+
+    <button class="btn-gerar" onclick="fabricarKey()">GERAR NOVA KEY</button>
+
+    <div id="result">
+        <span style="font-size: 12px; color: #aaa;">KEY GERADA COM SUCESSO:</span>
+        <span id="keyDisplay" class="key-txt">MRA-XXXXX</span>
+        <button class="copy-btn" onclick="copiarKey()">COPIAR KEY</button>
+    </div>
+</div>
+
+<script>
+    // Banco de dados local para persistência [cite: 2026-01-27]
+    let bancoKeys = JSON.parse(localStorage.getItem('mra_database')) || {};
+
+    function fabricarKey() {
+        const pass = document.getElementById('adminPass').value;
+        const tempo = document.getElementById('tempoKey').value;
+        
+        if(pass === "admin123") {
+            // Lógica de cálculo de tempo [cite: 2026-01-27]
+            let expira;
+            let prefixo;
+
+            if(tempo === "perm") {
+                expira = "permanente";
+                prefixo = "PERM-";
+            } else {
+                // Soma dias à data atual em milissegundos [cite: 2026-01-27]
+                expira = Date.now() + (parseInt(tempo) * 24 * 60 * 60 * 1000);
+                prefixo = tempo + "D-";
+            }
+
+            // Gera código aleatório
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const novaKey = prefixo + random;
+
+            // Salva no LocalStorage para o login reconhecer [cite: 2026-01-27]
+            bancoKeys[novaKey] = expira;
+            localStorage.setItem('mra_database', JSON.stringify(bancoKeys));
+
+            // Mostra na tela
+            document.getElementById('result').style.display = "block";
+            document.getElementById('keyDisplay').innerText = novaKey;
+        } else {
+            alert("Senha de Admin Incorreta!");
+        }
+    }
+
+    function copiarKey() {
+        const key = document.getElementById('keyDisplay').innerText;
+        navigator.clipboard.writeText(key);
+        alert("Key copiada!");
+    }
+</script>
+
+</body>
+</html>
